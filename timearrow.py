@@ -6,10 +6,18 @@ import pandas as pd
 import statsmodels.api as sm
 import matplotlib.pyplot as plt
 
+
+## Define Algorithm from paper, using the HSIC independence test implementation
+## of github user Seth or amber0309 (soubo.sub@gmail.com): https://github.com/amber0309
+
 from HSIC.HSIC import hsic_gam, rbf_dot
 
 def algorithm_1(f, b=None, sig1=0.1, sig2=0.05, v='a', p=2, q=0):  # b=f.T , how is p determined?
     """
+    TODO: complete docstring
+    Implementation of pseudocode of Algorithm 1 in
+    "The Arrow of Time in Multivariate Time Series" Bauer et al. (2016)
+    https://arxiv.org/pdf/1603.00784.pdf
     f : forward
     b : backward....
     sig1 : These are the defaults from the paper...
@@ -34,23 +42,40 @@ def algorithm_1(f, b=None, sig1=0.1, sig2=0.05, v='a', p=2, q=0):  # b=f.T , how
     else:
         return "I don't know."
 
+
+## Apply algorithm to simulated VAR model
+
+## Define sample hyperparameters
 T = 200
-alpha = 0.4
+
+## Define model hyperparameters
+alpha = 0.4 # or np.random.rand(1)
 p = 1
 Phi = np.array([[np.cos(alpha),-np.sin(alpha)],[np.sin(alpha),np.cos(alpha)]]) / 4
+
+## Initialize time series
 X = [np.array([0,0])]
 
+## Simulate VAR model
 for i in range(T-1):
+    ## One innovation
     X.append( np.dot(Phi,X[-1])+np.random.rand(2) )
 X = np.vstack(X)
 
+## Fit VAR model using statsmodels package
 model = sm.tsa.VAR(X)
 result = model.fit(p)
 print(result.summary())
-result.forecast(X[-p:],10)
-result.plot_forecast(10)
-#plt.show()
 
+## Forcast 10 further innovations of approximated VAR model
+result.forecast(X[-p:],10)
+
+## Plot sample and 10 forecasted innovations using statsmodels
+## and matplotlib.pyplot packages
+result.plot_forecast(10)
+plt.show()
+
+## Apply Algorithm 1 from https://arxiv.org/pdf/1603.00784.pdf
 print(algorithm_1(X,p=1))
 
 """
