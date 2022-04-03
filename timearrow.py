@@ -1,11 +1,7 @@
-import skvideo.io
-import skvideo.datasets
 import numpy as np
 
-import pandas as pd
 import statsmodels.api as sm
 import matplotlib.pyplot as plt
-
 
 ## Define Algorithm from paper, using the HSIC independence test implementation
 ## of github user Seth or amber0309 (soubo.sub@gmail.com): https://github.com/amber0309
