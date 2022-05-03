@@ -22,15 +22,19 @@ def algorithm_1(f, b=None, sig1=0.1, sig2=0.05, v='a', p=2, q=0):  # b=f.T , how
     if b is None:
         b = f[::-1]
     if v=='a':
-        fct = lambda x,y: - hsic_gam(x,y)
+        fct = lambda x,y: - hsic_gam(x,y)[1]
     elif v=='b':
-        fct = lambda x,y: p - value_hsic_gam(x,y)
+        fct = lambda x,y: p - hsic_gam(x,y)[1]
     else:
         raise ValueError("Algorithm version not correctly specified.")
 
-    model_f = sm.tsa.VAR(f).fit(p); resid_f = model_f.resid; fw = fct(f,resid_f)
-    model_b = sm.tsa.VAR(b).fit(p); resid_b = model_b.resid; bw = fct(b,resid_b)
-    if np.max(fw,bw) > sig1 and np.max(fw,bw) < sig2:
+    model_f = sm.tsa.VAR(f).fit(p)
+    resid_f = model_f.resid
+    fw = fct(f[1:,:],resid_f)
+    model_b = sm.tsa.VAR(b).fit(p); resid_b = model_b.resid; bw = fct(b[1:,:],resid_b)
+    print(fw)
+    print(bw)
+    if max(fw,bw) > sig1 and max(fw,bw) < sig2:
         if fw > bw:
             return "Time series in correct direction."
         else:
@@ -42,20 +46,27 @@ def algorithm_1(f, b=None, sig1=0.1, sig2=0.05, v='a', p=2, q=0):  # b=f.T , how
 ## Apply algorithm to simulated VAR model
 
 ## Define sample hyperparameters
-T = 200
+T = 2000
 
-## Define model hyperparameters
-alpha = 0.4 # or np.random.rand(1)
+## Define model hyperparameters as they are in the simulation section of the paper
+r = 3
+#alpha = 0.4 # or np.random.rand(1)
 p = 1
-Phi = np.array([[np.cos(alpha),-np.sin(alpha)],[np.sin(alpha),np.cos(alpha)]]) / 4
+lamb = 2.5
+#R = np.array([[np.cos(alpha),-np.sin(alpha)],[np.sin(alpha),np.cos(alpha)]]) / 4
+R = np.random.rand(2,2)
+# Change following line if i != 1
+Phi = lamb**(-1)*R-(2*lamb)**(-1)*np.ones(R.shape)
 
 ## Initialize time series
 X = [np.array([0,0])]
 
 ## Simulate VAR model
 for i in range(T-1):
+    noise = np.random.rand(2)
+    noise = noise / np.linalg.norm(noise) * np.abs(noise)**r
     ## One innovation
-    X.append( np.dot(Phi,X[-1])+np.random.rand(2) )
+    X.append( np.dot(Phi, X[-1])+ noise)
 X = np.vstack(X)
 
 ## Fit VAR model using statsmodels package
@@ -72,7 +83,7 @@ result.plot_forecast(10)
 plt.show()
 
 ## Apply Algorithm 1 from https://arxiv.org/pdf/1603.00784.pdf
-print(algorithm_1(X,p=1))
+print(algorithm_1(X,p=1,v='b'))
 
 """
 plt.figure()
