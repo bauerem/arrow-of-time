@@ -3,6 +3,8 @@ import numpy as np
 import statsmodels.api as sm
 import matplotlib.pyplot as plt
 
+from HSIC_own import HSIC_b
+
 ## Define Algorithm from paper, using the HSIC independence test implementation
 ## of github user Seth or amber0309 (soubo.sub@gmail.com): https://github.com/amber0309
 
@@ -22,9 +24,9 @@ def algorithm_1(f, b=None, sig1=0.1, sig2=0.05, v='a', p=2, q=0):  # b=f.T , how
     if b is None:
         b = f[::-1]
     if v=='a':
-        fct = lambda x,y: - hsic_gam(x,y)[1]
+        fct = lambda x,y: - HSIC_b(x,y)
     elif v=='b':
-        fct = lambda x,y: p - hsic_gam(x,y)[1]
+        fct = lambda x,y: p - HSIC_b(x,y)
     else:
         raise ValueError("Algorithm version not correctly specified.")
 
